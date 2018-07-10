@@ -6,27 +6,14 @@
     android:id="@+id/borderlauout"
     android:background="#dbdbdb">
 
-    <FrameLayout
+
+    <com.janumonster.mylibrary.SquareImageLayout
+        android:id="@+id/square_image_layout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:background="#ffabab">
-
-        <ImageView
-            android:id="@+id/image_back"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:background="#fff"/>
-
-        <ImageView
-            android:id="@+id/image_forward"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center" />
-
-
-    </FrameLayout>
+        android:layout_gravity="center"
+        />
 
     <LinearLayout
         android:layout_width="match_parent"
