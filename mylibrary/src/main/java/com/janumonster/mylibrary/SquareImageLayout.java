@@ -114,8 +114,7 @@ public class SquareImageLayout extends FrameLayout {
         //将layout的默认宽度设为屏幕宽度
         mLayoutWidth = Math.min(displayMetrics.widthPixels,displayMetrics.heightPixels);
 
-        Log.d(TAG, "initialImage: "+String.valueOf(mLayoutWidth));
-
+        //初始化image
         initialImage();
 
     }
