@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -37,18 +38,26 @@ import android.widget.ImageView;
  *  设置动画时长：setAnimationTime(int animationTime)
  *  设置layout宽度：setLayoutWidth(float layoutWidth)
  *  设置回初始状态：setToDefult()
+ *  置背景渐变动画时长：setTransitionTime(int transitionTime)
  */
 
 public class SquareImageLayout extends FrameLayout {
 
     private static final String TAG = "TEST";
 
+    //两张纯色背景图片
+    private Drawable whiteDrawable = getResources().getDrawable(R.drawable.white);
+    private Drawable blackDrawable = getResources().getDrawable(R.drawable.black);
+
+    //渐变动画时长
+    private int transitionTime = 200;
+
     //两个ImageView
     private ImageView mImageViewBack;
     private ImageView mImageViewForward;
 
     //图片ID,需要修改
-    private int imageID = R.drawable.horizontal;
+    private int imageID = R.drawable.square;
 
     //屏幕的宽度
     private float mLayoutWidth;
@@ -64,7 +73,7 @@ public class SquareImageLayout extends FrameLayout {
     private ScaleAnimation scaleToBig;
     private ScaleAnimation scaleToSmall;
     //缩放动画时长
-    private int animationTime = 300;
+    private int animationTime = 200;
 
     //判断是否已经缩小
     private boolean isSmall = false;
@@ -103,7 +112,7 @@ public class SquareImageLayout extends FrameLayout {
         wm.getDefaultDisplay().getMetrics(displayMetrics);
 
         //将layout的默认宽度设为屏幕宽度
-        mLayoutWidth = displayMetrics.widthPixels;
+        mLayoutWidth = Math.min(displayMetrics.widthPixels,displayMetrics.heightPixels);
 
         Log.d(TAG, "initialImage: "+String.valueOf(mLayoutWidth));
 
@@ -144,7 +153,7 @@ public class SquareImageLayout extends FrameLayout {
         mImageViewForward.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 
         //默认背景为白色
-        mImageViewBack.setBackgroundColor(Color.WHITE);
+        mImageViewBack.setImageResource(R.drawable.white);
 
     }
 
@@ -198,16 +207,16 @@ public class SquareImageLayout extends FrameLayout {
      */
     public void setWhiteBackground(){
 
-        mImageViewBack.setImageAlpha(0);
-        mImageViewBack.setBackgroundColor(Color.WHITE);
+      transitionBegin(mImageViewBack.getDrawable(),whiteDrawable);
+
     }
 
     /**
      * 设置背景为黑色，为了保证能将图片去掉，将图片透明度设为0
      */
     public void setBlackBackground(){
-        mImageViewBack.setImageAlpha(0);
-        mImageViewBack.setBackgroundColor(Color.BLACK);
+
+        transitionBegin(mImageViewBack.getDrawable(),blackDrawable);
     }
 
     /**
@@ -218,24 +227,11 @@ public class SquareImageLayout extends FrameLayout {
 
 //        //测试语句,不执行
         image = imageID;
-//        AlphaAnimation alphaAnimation = new AlphaAnimation(0.3f,1.0f);
-//        alphaAnimation.setDuration(300);
-//        alphaAnimation.setFillAfter(true);
-//        mImageViewBack.startAnimation(alphaAnimation);
+        Drawable imageDrawable = getResources().getDrawable(image);
 
-        mImageViewBack.setImageAlpha(255);
+        transitionBegin(mImageViewBack.getDrawable(),imageDrawable);
 
-        mImageViewBack.setImageResource(image);
     }
-
-    public void setBcakImageBitmap(Bitmap bitmap){
-        mImageViewBack.setImageBitmap(bitmap);
-    }
-
-    public void  setBackImageDrawable(Drawable drawable){
-        mImageViewBack.setImageDrawable(drawable);
-    }
-
 
     /**
      * 设置细边的显示
@@ -268,8 +264,7 @@ public class SquareImageLayout extends FrameLayout {
      */
     public void setToDefult(){
 
-        mImageViewBack.setImageAlpha(0);
-        mImageViewBack.setBackgroundColor(Color.WHITE);
+        mImageViewBack.setImageResource(R.drawable.white);
         if (!isSquare){
             removeBorder();
         }
@@ -281,6 +276,7 @@ public class SquareImageLayout extends FrameLayout {
      */
     public void setImageResource(int imageID) {
         this.imageID = imageID;
+
         //新图片刷新
         initialImage();
     }
@@ -290,8 +286,8 @@ public class SquareImageLayout extends FrameLayout {
      * @param layoutWidth
      */
     public void setLayoutWidth(float layoutWidth) {
-        this.mLayoutWidth = layoutWidth;
 
+        this.mLayoutWidth = layoutWidth;
         //以为有了新的宽度，所以重新初始化image
         init(getContext());
     }
@@ -314,6 +310,27 @@ public class SquareImageLayout extends FrameLayout {
      */
     public void setAnimationTime(int animationTime) {
         this.animationTime = animationTime;
+    }
+
+    /**
+     * 进行渐变动画
+     * @param oldDrawable
+     * @param newDrawable
+     */
+    public void transitionBegin(Drawable oldDrawable,Drawable newDrawable){
+
+        TransitionDrawable td = new TransitionDrawable(new Drawable[]{oldDrawable,newDrawable});
+        mImageViewBack.setImageDrawable(td);
+        td.startTransition(transitionTime);
+    }
+
+
+    /**
+     * 设置背景渐变动画时长 单位：ms
+     * @param transitionTime
+     */
+    public void setTransitionTime(int transitionTime) {
+        this.transitionTime = transitionTime;
     }
 
 }
