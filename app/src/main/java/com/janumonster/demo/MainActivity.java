@@ -1,5 +1,6 @@
 package com.janumonster.demo;
 
+import android.graphics.drawable.Drawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -11,8 +12,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private SquareImageLayout squareImageLayout;
 
-    //控制按钮
-    //button
+    //测试按钮
     private Button Btn_Origin;
     private Button Btn_black_border;
     private Button Btn_white_border;
@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 squareImageLayout.removeBorder();
                 break;
             case R.id.btn_gaos:
-                squareImageLayout.setImageBackground(-1);
+                squareImageLayout.setGuassBackground(getResources().getDrawable(R.drawable.horizontal));
                 break;
         }
     }

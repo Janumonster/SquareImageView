@@ -27,18 +27,20 @@ import android.widget.ImageView;
  *
  *  继承了FramLayout，在中部有两个叠加的正方形的ImageView，前置图片采用CENTER_INSTIDE填充，后置图片采用CENTER_CORP填充
  *  细边的出现采用ScaleAnimation实现
+ *  背景渐变采用
  *
  *  白色背景（默认）：setWhiteBackground()；
  *  黑色背景: setBlackground();
- *  图片背景: setGaussBackground(int);
+ *  图片背景: setGaussBackground(Drawable);
  *  设置图片：setImageResource(int);
- *  设置正方形与图片的比例：setTimes(float)
+ *  设置正方形与图片的比例：setTimes(float)，times的采用 105% --> 105 比例换算，输入105
  *  设置细边：setBorder()
  *  移除细边：removeBorder()
- *  设置动画时长：setAnimationTime(int animationTime)
- *  设置layout宽度：setLayoutWidth(float layoutWidth)
+ *  设置动画时长：setAnimationTime(int)
+ *  设置layout宽度：setLayoutWidth(float)
  *  设置回初始状态：setToDefult()
- *  置背景渐变动画时长：setTransitionTime(int transitionTime)
+ *  置背景渐变动画时长：setTransitionTime(int)
+ *
  */
 
 public class SquareImageLayout extends FrameLayout {
@@ -50,16 +52,16 @@ public class SquareImageLayout extends FrameLayout {
     private Drawable blackDrawable = getResources().getDrawable(R.drawable.black);
 
     //渐变动画时长
-    private int transitionTime = 200;
+    private int transitionTime = 150;
 
     //两个ImageView
     private ImageView mImageViewBack;
     private ImageView mImageViewForward;
 
-    //图片ID,需要修改
-    private int imageID = R.drawable.square;
+    //图片ID,需要修改，这里设置默认值
+    private int imageID = R.drawable.horizontal;
 
-    //屏幕的宽度
+    //布局的宽度
     private float mLayoutWidth;
 
     //用于计算细边的宽度，100% == 100,105% == 105
@@ -106,7 +108,7 @@ public class SquareImageLayout extends FrameLayout {
         mImageViewForward = mView.findViewById(R.id.image_forward);
         mImageViewBack = mView.findViewById(R.id.image_back);
 
-        //获得屏幕宽度
+        //获得屏幕宽度，狂赌一开始默认为屏幕宽度
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         DisplayMetrics displayMetrics = new DisplayMetrics();
         wm.getDefaultDisplay().getMetrics(displayMetrics);
@@ -127,9 +129,6 @@ public class SquareImageLayout extends FrameLayout {
         //计算细边的宽度
         thinEdge = mLayoutWidth/times*(times - 100)/2;
 
-        Log.d(TAG, "thinEdge : "+String.valueOf(thinEdge));
-
-
         //初始化后置图片宽高
         ViewGroup.LayoutParams imgBack = mImageViewBack.getLayoutParams();
         imgBack.width = (int) mLayoutWidth;
@@ -144,6 +143,7 @@ public class SquareImageLayout extends FrameLayout {
 
         //初始化动画效果
         initialScaleAnimation();
+
         //加载前置图片
         setImageViewForward(imageID);
 
@@ -206,7 +206,7 @@ public class SquareImageLayout extends FrameLayout {
      */
     public void setWhiteBackground(){
 
-      transitionBegin(mImageViewBack.getDrawable(),whiteDrawable);
+      beginTransition(mImageViewBack.getDrawable(),whiteDrawable);
 
     }
 
@@ -215,20 +215,19 @@ public class SquareImageLayout extends FrameLayout {
      */
     public void setBlackBackground(){
 
-        transitionBegin(mImageViewBack.getDrawable(),blackDrawable);
+        beginTransition(mImageViewBack.getDrawable(),blackDrawable);
     }
 
     /**
      * 设置背景image图片
-     * @param image
+     * @param imageDrawable
      */
-    public void setImageBackground(int image){
+    public void setGuassBackground(Drawable imageDrawable){
 
-//        //测试语句,不执行
-        image = imageID;
-        Drawable imageDrawable = getResources().getDrawable(image);
+        //测试语句,不执行
+//        imageDrawable = getResources().getDrawable(imageID);
 
-        transitionBegin(mImageViewBack.getDrawable(),imageDrawable);
+        beginTransition(mImageViewBack.getDrawable(),imageDrawable);
 
     }
 
@@ -288,7 +287,7 @@ public class SquareImageLayout extends FrameLayout {
 
         this.mLayoutWidth = layoutWidth;
         //以为有了新的宽度，所以重新初始化image
-        init(getContext());
+        initialImage();
     }
 
     /**
@@ -316,7 +315,7 @@ public class SquareImageLayout extends FrameLayout {
      * @param oldDrawable
      * @param newDrawable
      */
-    public void transitionBegin(Drawable oldDrawable,Drawable newDrawable){
+    public void beginTransition(Drawable oldDrawable,Drawable newDrawable){
 
         TransitionDrawable td = new TransitionDrawable(new Drawable[]{oldDrawable,newDrawable});
         mImageViewBack.setImageDrawable(td);
