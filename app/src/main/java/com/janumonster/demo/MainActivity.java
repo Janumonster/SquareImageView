@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         squareImageLayout = findViewById(R.id.square_image_layout);
         squareImageLayout.init(this);
+        squareImageLayout.setImageDrawable(getResources().getDrawable(R.drawable.horizontal));
 
         Btn_Origin=findViewById(R.id.btn_origin);
         Btn_white_border=findViewById(R.id.btn_white_border);
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 squareImageLayout.removeBorder();
                 break;
             case R.id.btn_gaos:
-                squareImageLayout.setGuassBackground(getResources().getDrawable(R.drawable.horizontal));
+                squareImageLayout.setGuassBackground();
                 break;
         }
     }

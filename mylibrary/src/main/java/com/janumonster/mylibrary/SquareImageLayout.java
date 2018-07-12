@@ -1,9 +1,6 @@
 package com.janumonster.mylibrary;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.support.annotation.NonNull;
@@ -15,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
 import android.widget.FrameLayout;
@@ -50,24 +46,33 @@ public class SquareImageLayout extends FrameLayout {
     //两张纯色背景图片
     private Drawable whiteDrawable = getResources().getDrawable(R.drawable.white);
     private Drawable blackDrawable = getResources().getDrawable(R.drawable.black);
+    private Drawable guassDrawable = getResources().getDrawable(R.drawable.transparents);
+
 
     //渐变动画时长
     private int transitionTime = 150;
 
-    //两个ImageView
-    private ImageView mImageViewBack;
-    private ImageView mImageViewForward;
+    //图片的drawable
+    private Drawable imageDrawable = getResources().getDrawable(R.drawable.transparents);
 
-    //图片ID,需要修改，这里设置默认值
-    private int imageID = R.drawable.horizontal;
+    //自定义控件的view
+    private View mView;
 
-    //布局的宽度
+    //两个imageview
+    private ImageView mIvBack;
+    private ImageView mIvForward;
+
     private float mLayoutWidth;
-
     //用于计算细边的宽度，100% == 100,105% == 105
     private float times = 105;
     //细边的宽度
     private float thinEdge;
+
+    //判断是否已经缩小
+    private boolean isSmall = false;
+
+    //是否是正方形
+    private boolean isSquare = false;
 
     //缩放比例
     private float scaling;
@@ -77,21 +82,13 @@ public class SquareImageLayout extends FrameLayout {
     //缩放动画时长
     private int animationTime = 200;
 
-    //判断是否已经缩小
-    private boolean isSmall = false;
-
-    //是否是正方形
-    private boolean isSquare = false;
-
-    //自定义控件的View
-    private View mView;
 
     public SquareImageLayout(@NonNull Context context) {
-        super(context, null);
+        super(context,null);
     }
 
     public SquareImageLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs, 0);
+        super(context, attrs,0);
     }
 
     public SquareImageLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
@@ -99,14 +96,17 @@ public class SquareImageLayout extends FrameLayout {
         init(context);
     }
 
-
-    public void init(Context context) {
+    /**
+     * 初始化
+     * @param context
+     */
+    public void init(Context context){
 
         mView = LayoutInflater.from(context).inflate(R.layout.square_image_view, this,true);
 
         //实例化imageview
-        mImageViewForward = mView.findViewById(R.id.image_forward);
-        mImageViewBack = mView.findViewById(R.id.image_back);
+        mIvForward = mView.findViewById(R.id.image_forward);
+        mIvBack = mView.findViewById(R.id.image_back);
 
         //获得屏幕宽度，狂赌一开始默认为屏幕宽度
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -116,59 +116,25 @@ public class SquareImageLayout extends FrameLayout {
         //将layout的默认宽度设为屏幕宽度
         mLayoutWidth = Math.min(displayMetrics.widthPixels,displayMetrics.heightPixels);
 
-        //初始化image
-        initialImage();
+        //初始化conten和缩放动画
+        initContentView();
 
+        loadImage();
     }
 
     /**
-     * 初始化正方形image
+     * 载入图片，并判断是否是正方形
      */
-    private void initialImage() {
+    private void loadImage() {
 
-        //计算细边的宽度
-        thinEdge = mLayoutWidth/times*(times - 100)/2;
-
-        //初始化后置图片宽高
-        ViewGroup.LayoutParams imgBack = mImageViewBack.getLayoutParams();
-        imgBack.width = (int) mLayoutWidth;
-        imgBack.height = (int) mLayoutWidth;
-        mImageViewBack.setLayoutParams(imgBack);
-
-        //初始化前置图片宽高
-        ViewGroup.LayoutParams imgForward = mImageViewForward.getLayoutParams();
-        imgForward.width = (int) mLayoutWidth;
-        imgForward.height = (int) mLayoutWidth;
-        mImageViewForward.setLayoutParams(imgForward);
-
-        //初始化动画效果
-        initialScaleAnimation();
-
-        //加载前置图片
-        setImageViewForward(imageID);
-
-        //设置图片的ScaleType
-        mImageViewBack.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        mImageViewForward.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-
-        //默认背景为白色
-        mImageViewBack.setImageResource(R.drawable.white);
-
-    }
-
-    /**
-     * 设置前景image图片，获得thinEdge数据
-     * 判断是否是正方形，是，直接加thinEdge
-     * @param forwardImageID
-     */
-    public void setImageViewForward(int forwardImageID){
-
-        mImageViewForward.setImageResource(forwardImageID);
+        //设置前置图片
+        mIvForward.setImageDrawable(imageDrawable);
+        guassDrawable = imageDrawable;
 
         //获得图片的宽高
-        mImageViewForward.measure(0,0);
-        int imageWidth = mImageViewForward.getMeasuredWidth();
-        int imageHight = mImageViewForward.getMeasuredHeight();
+        mIvForward.measure(0,0);
+        int imageWidth = mIvForward.getMeasuredWidth();
+        int imageHight = mIvForward.getMeasuredHeight();
 
         //如果是正方形，一开始就加细边
         if (imageHight == imageWidth){
@@ -177,17 +143,50 @@ public class SquareImageLayout extends FrameLayout {
             isSquare = true;
         }else {
             isSquare = false;
+            isSmall = false;
         }
 
+    }
+
+
+    /**
+     * 初始化正方形
+     */
+    private void initContentView(){
+
+        //计算细边的宽度
+        thinEdge = mLayoutWidth/times*(times - 100)/2;
+        Log.d(TAG, "initialImage: "+thinEdge);
+
+        //计算出缩放比例
+        scaling = (mLayoutWidth - thinEdge*2)/mLayoutWidth;
+
+        initiScaleAnimation();
+
+        //初始化后置图片宽高
+        ViewGroup.LayoutParams imgBack = mIvBack.getLayoutParams();
+        imgBack.width = (int) mLayoutWidth;
+        imgBack.height = (int) mLayoutWidth;
+        mIvBack.setLayoutParams(imgBack);
+
+        //初始化前置图片宽高
+        ViewGroup.LayoutParams imgForward = mIvForward.getLayoutParams();
+        imgForward.width = (int) mLayoutWidth;
+        imgForward.height = (int) mLayoutWidth;
+        mIvForward.setLayoutParams(imgForward);
+
+        //设置图片的ScaleType
+        mIvBack.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        mIvForward.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+
+        //默认背景为白色
+        mIvBack.setImageDrawable(whiteDrawable);
     }
 
     /**
      * 初始化缩放动画
      */
-    private void initialScaleAnimation() {
-
-        //计算出缩放比例
-        scaling = (mLayoutWidth - thinEdge*2)/mLayoutWidth;
+    private void initiScaleAnimation() {
 
         //设置无边框到有边框的动画
         scaleToSmall = new ScaleAnimation(1.0f, scaling,1.0f, scaling, Animation.RELATIVE_TO_SELF,0.5f,Animation.RELATIVE_TO_SELF,0.5f);
@@ -202,11 +201,11 @@ public class SquareImageLayout extends FrameLayout {
     }
 
     /**
-     * 设置背景为白色，为了保证能将图片去掉，将图片透明度设为0
+     * 设置白色背景
      */
     public void setWhiteBackground(){
 
-      beginTransition(mImageViewBack.getDrawable(),whiteDrawable);
+        beginTransition(mIvBack.getDrawable(),whiteDrawable);
 
     }
 
@@ -215,20 +214,31 @@ public class SquareImageLayout extends FrameLayout {
      */
     public void setBlackBackground(){
 
-        beginTransition(mImageViewBack.getDrawable(),blackDrawable);
+        beginTransition(mIvBack.getDrawable(),blackDrawable);
     }
 
     /**
      * 设置背景image图片
-     * @param imageDrawable
      */
-    public void setGuassBackground(Drawable imageDrawable){
+    public void setGuassBackground(){
 
         //测试语句,不执行
 //        imageDrawable = getResources().getDrawable(imageID);
 
-        beginTransition(mImageViewBack.getDrawable(),imageDrawable);
+        beginTransition(mIvBack.getDrawable(),guassDrawable);
 
+    }
+
+    /**
+     * 进行渐变动画
+     * @param oldDrawable
+     * @param newDrawable
+     */
+    public void beginTransition(Drawable oldDrawable,Drawable newDrawable){
+
+        TransitionDrawable td = new TransitionDrawable(new Drawable[]{oldDrawable,newDrawable});
+        mIvBack.setImageDrawable(td);
+        td.startTransition(transitionTime);
     }
 
     /**
@@ -237,7 +247,7 @@ public class SquareImageLayout extends FrameLayout {
      */
     public void setBorder(){
         if (!isSmall){
-            mImageViewForward.startAnimation(scaleToSmall);
+            mIvForward.startAnimation(scaleToSmall);
             isSmall = true;
         }
     }
@@ -250,76 +260,30 @@ public class SquareImageLayout extends FrameLayout {
     public void removeBorder(){
         if (isSmall){
             if (!isSquare){
-                mImageViewForward.startAnimation(scaleToBig);
+                mIvForward.startAnimation(scaleToBig);
                 isSmall = false;
             }
         }
     }
 
-
     /**
-     * 将状态设置回初始状态
+     * 设置前置图片
+     * @param imageDrawable
      */
-    public void setToDefult(){
+    public void setImageDrawable(Drawable imageDrawable) {
 
-        mImageViewBack.setImageResource(R.drawable.white);
-        if (!isSquare){
-            removeBorder();
-        }
+        this.imageDrawable = imageDrawable;
+
+        loadImage();
     }
 
     /**
-     * 设置图片
-     * @param imageID
+     * 根据设置的控件宽度生成正方形
+     * @param mLayoutWidth
      */
-    public void setImageResource(int imageID) {
-        this.imageID = imageID;
-
-        //新图片刷新
-        initialImage();
-    }
-
-    /**
-     * 设置layout的宽度
-     * @param layoutWidth
-     */
-    public void setLayoutWidth(float layoutWidth) {
-
-        this.mLayoutWidth = layoutWidth;
-        //以为有了新的宽度，所以重新初始化image
-        initialImage();
-    }
-
-    /**
-     * 设置正方形的百分比值
-     * 百分数扩大100倍后的值
-     * e.g.：105% --> 105
-     * @param times
-     */
-    public void setTimes(float times) {
-        this.times = times;
-        //新的倍数，重置动画效果
-        initialScaleAnimation();
-    }
-
-    /**
-     * 设置动画时间 单位：ms
-     * @param animationTime
-     */
-    public void setAnimationTime(int animationTime) {
-        this.animationTime = animationTime;
-    }
-
-    /**
-     * 进行渐变动画
-     * @param oldDrawable
-     * @param newDrawable
-     */
-    public void beginTransition(Drawable oldDrawable,Drawable newDrawable){
-
-        TransitionDrawable td = new TransitionDrawable(new Drawable[]{oldDrawable,newDrawable});
-        mImageViewBack.setImageDrawable(td);
-        td.startTransition(transitionTime);
+    public void setmLayoutWidth(float mLayoutWidth) {
+        this.mLayoutWidth = mLayoutWidth;
+        initContentView();
     }
 
 
@@ -331,4 +295,36 @@ public class SquareImageLayout extends FrameLayout {
         this.transitionTime = transitionTime;
     }
 
+    /**
+     * 设置动画时间 单位：ms
+     * @param animationTime
+     */
+    public void setAnimationTime(int animationTime) {
+        this.animationTime = animationTime;
+    }
+
+    /**
+     * 设置正方形的百分比值
+     * 百分数扩大100倍后的值
+     * e.g.：105% --> 105
+     * @param times
+     */
+    public void setTimes(float times) {
+
+        this.times = times;
+        //新的倍数，重置动画效果
+        initContentView();
+
+    }
+
+    /**
+     * 将状态设置回初始状态
+     */
+    public void setToDefult(){
+
+        setWhiteBackground();
+        if (!isSquare){
+            removeBorder();
+        }
+    }
 }

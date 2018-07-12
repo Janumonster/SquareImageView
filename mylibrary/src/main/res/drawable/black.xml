@@ -6,7 +6,7 @@
         android:color="#000"/>
 
     <size
-        android:width="500dp"
-        android:height="500dp"/>
+        android:width="10dp"
+        android:height="10dp"/>
 
 </shape>
